@@ -1,2 +1,3 @@
 mongo.ini
 mgo-statsd
+statsd-collector-mongo

@@ -31,4 +31,11 @@ To build a local image from this repo using:
 $ docker build -t mgo-statsd .
 ```
 
+## Debugging
 
+You can capture the udp traffic dump by using the following shell command,
+replacing `<PORT>` with the port of your statsd server (e.g., 8125)
+
+```
+sudo tcpdump -i any -vvvv "dst port <PORT>" -X -nn
+```

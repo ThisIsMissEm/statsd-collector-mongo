@@ -13,60 +13,60 @@ import (
 )
 
 type Connections struct {
-	Current      int64 "current"
-	Available    int64 "available"
-	TotalCreated int64 "totalCreated"
+	Current      int64 `bson:"current"`
+	Available    int64 `bson:"available"`
+	TotalCreated int64 `bson:"totalCreated"`
 }
 
 type Mem struct {
-	Resident          int64 "resident"
-	Virtual           int64 "virtual"
-	Mapped            int64 "mapped"
-	MappedWithJournal int64 "mappedWithJournal"
+	Resident          int64 `bson:"resident"`
+	Virtual           int64 `bson:"virtual"`
+	Mapped            int64 `bson:"mapped"`
+	MappedWithJournal int64 `bson:"mappedWithJournal"`
 }
 
 type RWT struct {
-	Readers int64 "readers"
-	Writers int64 "writers"
-	Total   int64 "total"
+	Readers int64 `bson:"readers"`
+	Writers int64 `bson:"writers"`
+	Total   int64 `bson:"total"`
 }
 
 type GlobalLock struct {
-	TotalTime     int64 "totalTime"
-	LockTime      int64 "lockTime"
-	CurrentQueue  RWT   "currentQueue"
-	ActiveClients RWT   "activeClients"
+	TotalTime     int64 `bson:"totalTime"`
+	LockTime      int64 `bson:"lockTime"`
+	CurrentQueue  RWT   `bson:"currentQueue"`
+	ActiveClients RWT   `bson:"activeClients"`
 }
 
 type Opcounters struct {
-	Insert  int64 "insert"
-	Query   int64 "query"
-	Update  int64 "update"
-	Delete  int64 "delete"
-	GetMore int64 "getmore"
-	Command int64 "command"
+	Insert  int64 `bson:"insert"`
+	Query   int64 `bson:"query"`
+	Update  int64 `bson:"update"`
+	Delete  int64 `bson:"delete"`
+	GetMore int64 `bson:"getmore"`
+	Command int64 `bson:"command"`
 }
 
 type ExtraInfo struct {
-	PageFaults       int64 "page_faults"
-	HeapUsageInBytes int64 "heap_usage_bytes"
+	PageFaults       int64 `bson:"page_faults"`
+	HeapUsageInBytes int64 `bson:"heap_usage_bytes"`
 }
 
 type ServerStatus struct {
-	Host                 string              "host"
-	Version              string              "version"
-	Process              string              "process"
-	Pid                  int64               "pid"
-	Uptime               int64               "uptime"
-	UptimeInMillis       int64               "uptimeMillis"
-	UptimeEstimate       int64               "uptimeEstimate"
-	LocalTime            bson.MongoTimestamp "localTime"
-	Connections          Connections         "connections"
-	ExtraInfo            ExtraInfo           "extra_info"
-	Mem                  Mem                 "mem"
-	GlobalLocks          GlobalLock          "globalLock"
-	Opcounters           Opcounters          "opcounters"
-	OpcountersReplicaSet Opcounters          "opcountersRepl"
+	Host                 string              `bson:"host"`
+	Version              string              `bson:"version"`
+	Process              string              `bson:"process"`
+	Pid                  int64               `bson:"pid"`
+	Uptime               int64               `bson:"uptime"`
+	UptimeInMillis       int64               `bson:"uptimeMillis"`
+	UptimeEstimate       int64               `bson:"uptimeEstimate"`
+	LocalTime            bson.MongoTimestamp `bson:"localTime"`
+	Connections          Connections         `bson:"connections"`
+	ExtraInfo            ExtraInfo           `bson:"extra_info"`
+	Mem                  Mem                 `bson:"mem"`
+	GlobalLocks          GlobalLock          `bson:"globalLock"`
+	Opcounters           Opcounters          `bson:"opcounters"`
+	OpcountersReplicaSet Opcounters          `bson:"opcountersRepl"`
 }
 
 func serverStatus(mongoURL string) ServerStatus {

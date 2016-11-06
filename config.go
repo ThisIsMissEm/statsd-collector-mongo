@@ -3,13 +3,15 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vharitonsky/iniflags"
 	"time"
+
+	"github.com/vharitonsky/iniflags"
 )
 
 type strings []string
 
 type Mongo struct {
+	URL       string
 	Addresses []string
 	User      string
 	Pass      string
@@ -41,6 +43,7 @@ var mongo_addresses strings
 
 func LoadConfig() Config {
 	var (
+		mongo_url      = flag.String("mongo_url", "", "MongoDB URL")
 		mongo_user     = flag.String("mongo_user", "", "MongoDB User")
 		mongo_pass     = flag.String("mongo_pass", "", "MongoDB Password")
 		statsd_host    = flag.String("statsd_host", "localhost", "StatsD Host")
@@ -52,12 +55,18 @@ func LoadConfig() Config {
 
 	flag.Var(&mongo_addresses, "mongo_address", "List of mongo addresses in host:port format")
 	iniflags.Parse()
+
+	if *mongo_url != "" {
+		mongo_addresses = append(mongo_addresses, *mongo_url)
+	}
+
 	if len(mongo_addresses) == 0 {
 		mongo_addresses = append(mongo_addresses, "localhost:27017")
 	}
 	cfg := Config{
 		Interval: *interval,
 		Mongo: Mongo{
+			URL:       *mongo_url,
 			Addresses: mongo_addresses,
 			User:      *mongo_user,
 			Pass:      *mongo_pass,

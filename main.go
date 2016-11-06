@@ -19,6 +19,7 @@ type ConfigSpecification struct {
 	StatsdHost        string `envconfig:"statsd_host" default:"localhost"`
 	StatsdPort        int    `envconfig:"statsd_port" default:"8125"`
 	StatsdPrefix      string `envconfig:"statsd_prefix" default:"mongodb"`
+	HostedGraphiteKey string `envconfig:"hosted_graphite_key"`
 	UpdateInterval    string `envconfig:"update_interval" default:"5s"`
 	Debug             bool
 }
@@ -291,6 +292,10 @@ func main() {
 
 	socketAddress = fmt.Sprintf("%s:%d", config.StatsdHost, config.StatsdPort)
 	prefix = ""
+
+	if len(config.HostedGraphiteKey) > 0 {
+		prefix = fmt.Sprintf("%s.", config.HostedGraphiteKey)
+	}
 
 	if len(config.StatsdPrefix) > 0 {
 		prefix = fmt.Sprintf("%s%s", prefix, config.StatsdPrefix)

@@ -9,7 +9,7 @@ go_is_not_installed=`which go`
 
 # install the deps.  should use a build tool...
 go get github.com/cactus/go-statsd-client/statsd
-go get github.com/vharitonsky/iniflags
+go get github.com/kelseyhightower/envconfig
 go get gopkg.in/mgo.v2
 
 # now build it

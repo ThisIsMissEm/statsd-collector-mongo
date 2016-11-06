@@ -2,15 +2,26 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
 	"github.com/cactus/go-statsd-client/statsd"
+	"github.com/kelseyhightower/envconfig"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
+
+type ConfigSpecification struct {
+	MongoURL          string `envconfig:"mongo_url" default:"mongodb://localhost:27017"`
+	StatsdHost        string `envconfig:"statsd_host" default:"localhost"`
+	StatsdPort        int    `envconfig:"statsd_port" default:"8125"`
+	StatsdPrefix      string `envconfig:"statsd_prefix" default:"mongodb"`
+	UpdateInterval    string `envconfig:"update_interval" default:"5s"`
+	Debug             bool
+}
 
 type Connections struct {
 	Current      int64 `bson:"current"`
@@ -269,10 +280,32 @@ func pushStats(client statsd.Statter, status ServerStatus) error {
 }
 
 func main() {
-	config := LoadConfig()
+	var config ConfigSpecification
+	var socketAddress string
+	var prefix string
 
-	socketAddress = fmt.Sprintf("%s:%d", config.Statsd.Host, config.Statsd.Port)
+	err := envconfig.Process("", &config)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	socketAddress = fmt.Sprintf("%s:%d", config.StatsdHost, config.StatsdPort)
 	prefix = ""
+
+	if len(config.StatsdPrefix) > 0 {
+		prefix = fmt.Sprintf("%s%s", prefix, config.StatsdPrefix)
+	}
+
+	updateInterval, err := time.ParseDuration(config.UpdateInterval)
+	if err != nil {
+		log.Println(fmt.Sprintf("Invalid update interval given: %s", config.UpdateInterval))
+		log.Fatal(err.Error())
+	}
+
+	// Print out debug info if need be:
+	if config.Debug {
+		println(fmt.Sprintf("Sending stats to %s using prefix: '%s' at interval of %s", socketAddress, prefix, updateInterval))
+	}
 
 	client, err := statsd.NewClient(socketAddress, prefix)
 	if err != nil {
@@ -280,13 +313,13 @@ func main() {
 	}
 	defer client.Close()
 
-	ticker := time.NewTicker(config.Interval)
+	ticker := time.NewTicker(updateInterval)
 	quit := make(chan struct{})
 	go func() {
 		for {
 			select {
 			case <-ticker.C:
-				err := pushStats(client, serverStatus(config.Mongo.URL))
+				err := pushStats(client, serverStatus(config.MongoURL))
 				if err != nil {
 					fmt.Println(err)
 				}

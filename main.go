@@ -249,8 +249,14 @@ func pushExtraInfo(client statsd.Statter, info ExtraInfo) error {
 	return nil
 }
 
-func pushStats(client statsd.Statter, status ServerStatus) error {
+func pushStats(socketAddress string, prefix string, status ServerStatus) error {
 	var err error
+
+	client, err := statsd.NewClient(socketAddress, prefix)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	defer client.Close()
 
 	err = pushConnections(client, status.Connections)
 	if err != nil {
@@ -318,19 +324,13 @@ func main() {
 		println(fmt.Sprintf("Sending stats to %s using prefix: '%s' at interval of %s", socketAddress, prefix, updateInterval))
 	}
 
-	client, err := statsd.NewClient(socketAddress, prefix)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	defer client.Close()
-
 	ticker := time.NewTicker(updateInterval)
 	quit := make(chan struct{})
 	go func() {
 		for {
 			select {
 			case <-ticker.C:
-				err := pushStats(client, serverStatus(config.MongoURL))
+				err := pushStats(socketAddress, prefix, serverStatus(config.MongoURL))
 				if err != nil {
 					fmt.Println(err)
 				}

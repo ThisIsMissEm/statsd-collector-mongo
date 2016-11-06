@@ -2,13 +2,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/cactus/go-statsd-client/statsd"
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/cactus/go-statsd-client/statsd"
+	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type Connections struct {
@@ -245,18 +246,8 @@ func pushExtraInfo(client statsd.Statter, info ExtraInfo) error {
 	return nil
 }
 
-func pushStats(statsd_config Statsd, status ServerStatus) error {
-	prefix := statsd_config.Env
-	if len(statsd_config.Cluster) > 0 {
-		prefix = fmt.Sprintf("%s.%s", prefix, statsd_config.Cluster)
-	}
-	prefix = fmt.Sprintf("%s.%s", prefix, status.Host)
-	host_port := fmt.Sprintf("%s:%d", statsd_config.Host, statsd_config.Port)
-	client, err := statsd.NewClient(host_port, prefix)
-	if err != nil {
-		return err
-	}
-	defer client.Close()
+func pushStats(client statsd.Statter, status ServerStatus) error {
+	var err error
 
 	err = pushConnections(client, status.Connections)
 	if err != nil {
@@ -289,13 +280,22 @@ func pushStats(statsd_config Statsd, status ServerStatus) error {
 func main() {
 	config := LoadConfig()
 
+	socketAddress = fmt.Sprintf("%s:%d", config.Statsd.Host, config.Statsd.Port)
+	prefix = ""
+
+	client, err := statsd.NewClient(socketAddress, prefix)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	defer client.Close()
+
 	ticker := time.NewTicker(config.Interval)
 	quit := make(chan struct{})
 	go func() {
 		for {
 			select {
 			case <-ticker.C:
-				err := pushStats(config.Statsd, serverStatus(config.Mongo))
+				err := pushStats(client, serverStatus(config.Mongo))
 				if err != nil {
 					fmt.Println(err)
 				}

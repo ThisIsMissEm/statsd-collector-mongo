@@ -64,6 +64,14 @@ type ExtraInfo struct {
 	HeapUsageInBytes int64 `bson:"heap_usage_bytes"`
 }
 
+type Asserts struct {
+	Regular   int64 `bson:"regular"`
+	Warning   int64 `bson:"warning"`
+	Message   int64 `bson:"msg"`
+	User      int64 `bson:"user"`
+	Rollovers int64 `bson:"rollovers"`
+}
+
 type ServerStatus struct {
 	Host                 string              `bson:"host"`
 	Version              string              `bson:"version"`
@@ -79,6 +87,7 @@ type ServerStatus struct {
 	GlobalLocks          GlobalLock          `bson:"globalLock"`
 	Opcounters           Opcounters          `bson:"opcounters"`
 	OpcountersReplicaSet Opcounters          `bson:"opcountersRepl"`
+	Asserts              Asserts             `bson:"asserts"`
 }
 
 func serverStatus(mongoURL string) (*ServerStatus, error) {
@@ -246,6 +255,37 @@ func pushExtraInfo(client statsd.Statter, info ExtraInfo) error {
 	return nil
 }
 
+func pushAsserts(client statsd.Statter, asserts Asserts) error {
+	var err error
+
+	err = client.Gauge("asserts.regular", asserts.Regular, 1.0)
+	if err != nil {
+		return err
+	}
+
+	err = client.Gauge("asserts.warning", asserts.Warning, 1.0)
+	if err != nil {
+		return err
+	}
+
+	err = client.Gauge("asserts.message", asserts.Message, 1.0)
+	if err != nil {
+		return err
+	}
+
+	err = client.Gauge("asserts.user", asserts.User, 1.0)
+	if err != nil {
+		return err
+	}
+
+	err = client.Gauge("asserts.rollovers", asserts.Rollovers, 1.0)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func pushStats(socketAddress string, prefix string, status ServerStatus) error {
 	var err error
 
@@ -266,6 +306,11 @@ func pushStats(socketAddress string, prefix string, status ServerStatus) error {
 	}
 
 	err = pushMem(client, status.Mem)
+	if err != nil {
+		return err
+	}
+
+	err = pushAsserts(client, status.Asserts)
 	if err != nil {
 		return err
 	}

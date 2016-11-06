@@ -301,6 +301,12 @@ func main() {
 		prefix = fmt.Sprintf("%s%s", prefix, config.StatsdPrefix)
 	}
 
+	err = statsd.CheckName(prefix)
+	if err != nil {
+		log.Println("Either $HOSTED_GRAPHITE_KEY or $STATSD_PREFIX contains characters that are not valid with statsd")
+		log.Fatal(err.Error())
+	}
+
 	updateInterval, err := time.ParseDuration(config.UpdateInterval)
 	if err != nil {
 		log.Println(fmt.Sprintf("Invalid update interval given: %s", config.UpdateInterval))

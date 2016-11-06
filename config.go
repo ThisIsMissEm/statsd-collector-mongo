@@ -11,10 +11,7 @@ import (
 type strings []string
 
 type Mongo struct {
-	URL       string
-	Addresses []string
-	User      string
-	Pass      string
+	URL string
 }
 
 type Statsd struct {
@@ -43,9 +40,7 @@ var mongo_addresses strings
 
 func LoadConfig() Config {
 	var (
-		mongo_url      = flag.String("mongo_url", "", "MongoDB URL")
-		mongo_user     = flag.String("mongo_user", "", "MongoDB User")
-		mongo_pass     = flag.String("mongo_pass", "", "MongoDB Password")
+		mongo_url      = flag.String("mongo_url", "mongodb://localhost:27017", "URL to the mongodb server to gather metrics from (mongodb://...)")
 		statsd_host    = flag.String("statsd_host", "localhost", "StatsD Host")
 		statsd_port    = flag.Int("statsd_port", 8125, "StatsD Port")
 		statsd_env     = flag.String("statsd_env", "dev", "StatsD metric environment prefix")
@@ -53,23 +48,12 @@ func LoadConfig() Config {
 		interval       = flag.Duration("interval", 5*time.Second, "Polling interval")
 	)
 
-	flag.Var(&mongo_addresses, "mongo_address", "List of mongo addresses in host:port format")
 	iniflags.Parse()
 
-	if *mongo_url != "" {
-		mongo_addresses = append(mongo_addresses, *mongo_url)
-	}
-
-	if len(mongo_addresses) == 0 {
-		mongo_addresses = append(mongo_addresses, "localhost:27017")
-	}
 	cfg := Config{
 		Interval: *interval,
 		Mongo: Mongo{
-			URL:       *mongo_url,
-			Addresses: mongo_addresses,
-			User:      *mongo_user,
-			Pass:      *mongo_pass,
+			URL: *mongo_url,
 		},
 		Statsd: Statsd{
 			Host:    *statsd_host,

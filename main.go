@@ -69,35 +69,26 @@ type ServerStatus struct {
 	OpcountersReplicaSet Opcounters          "opcountersRepl"
 }
 
-func serverStatus(mongo_config Mongo) ServerStatus {
-	info := mgo.DialInfo{
-		Addrs:   mongo_config.Addresses,
-		Direct:  false,
-		Timeout: time.Second * 30,
-	}
+func serverStatus(mongoURL string) ServerStatus {
+	var session *mgo.Session
+	var status ServerStatus
+	var err error
 
-	session, err := mgo.DialWithInfo(&info)
+	session, err = mgo.DialWithTimeout(mongoURL, 30*time.Second)
 	if err != nil {
 		panic(err)
 	}
 	defer session.Close()
 
-	if len(mongo_config.User) > 0 {
-		cred := mgo.Credential{Username: mongo_config.User, Password: mongo_config.Pass}
-		err = session.Login(&cred)
-		if err != nil {
-			panic(err)
-		}
-	}
-
 	// Optional. Switch the session to a monotonic behavior.
 	session.SetMode(mgo.Monotonic, true)
 
-	var s ServerStatus
-	if err := session.Run("serverStatus", &s); err != nil {
+	err = session.Run("serverStatus", &status)
+	if err != nil {
 		panic(err)
 	}
-	return s
+
+	return status
 }
 
 func pushConnections(client statsd.Statter, connections Connections) error {
@@ -295,7 +286,7 @@ func main() {
 		for {
 			select {
 			case <-ticker.C:
-				err := pushStats(client, serverStatus(config.Mongo))
+				err := pushStats(client, serverStatus(config.Mongo.URL))
 				if err != nil {
 					fmt.Println(err)
 				}

@@ -254,7 +254,7 @@ func pushStats(socketAddress string, prefix string, status ServerStatus) error {
 
 	client, err := statsd.NewClient(socketAddress, prefix)
 	if err != nil {
-		log.Fatal(err.Error())
+		return err
 	}
 	defer client.Close()
 

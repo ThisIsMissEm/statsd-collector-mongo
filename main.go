@@ -81,14 +81,14 @@ type ServerStatus struct {
 	OpcountersReplicaSet Opcounters          `bson:"opcountersRepl"`
 }
 
-func serverStatus(mongoURL string) ServerStatus {
+func serverStatus(mongoURL string) (*ServerStatus, error) {
 	var session *mgo.Session
 	var status ServerStatus
 	var err error
 
 	session, err = mgo.DialWithTimeout(mongoURL, 30*time.Second)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	defer session.Close()
 
@@ -97,10 +97,10 @@ func serverStatus(mongoURL string) ServerStatus {
 
 	err = session.Run("serverStatus", &status)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return status
+	return &status, nil
 }
 
 func pushConnections(client statsd.Statter, connections Connections) error {
@@ -286,6 +286,21 @@ func pushStats(socketAddress string, prefix string, status ServerStatus) error {
 	return nil
 }
 
+func update(socketAddress string, prefix string, mongoURL string) {
+	var err error
+
+	status, err := serverStatus(mongoURL)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	err = pushStats(socketAddress, prefix, *status)
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
 func main() {
 	var config ConfigSpecification
 	var socketAddress string
@@ -330,10 +345,7 @@ func main() {
 		for {
 			select {
 			case <-ticker.C:
-				err := pushStats(socketAddress, prefix, serverStatus(config.MongoURL))
-				if err != nil {
-					fmt.Println(err)
-				}
+				update(socketAddress, prefix, config.MongoURL)
 			case <-quit:
 				ticker.Stop()
 				return

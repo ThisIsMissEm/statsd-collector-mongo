@@ -92,9 +92,6 @@ func serverStatus(mongoURL string) (*ServerStatus, error) {
 	}
 	defer session.Close()
 
-	// Optional. Switch the session to a monotonic behavior.
-	session.SetMode(mgo.Monotonic, true)
-
 	err = session.Run("serverStatus", &status)
 	if err != nil {
 		return nil, err

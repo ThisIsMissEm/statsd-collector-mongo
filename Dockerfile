@@ -1,9 +1,8 @@
 FROM golang
 
-ADD . /usr/src/mgo-statsd
-WORKDIR /usr/src/mgo-statsd
+ADD . /usr/src/statsd-collector-mongo
+WORKDIR /usr/src/statsd-collector-mongo
 
 RUN ./build.sh
 
-ENTRYPOINT [ "./mgo-statsd" ]
-CMD [ "--help" ]
+ENTRYPOINT /usr/src/statsd-collector-mongo/statsd-collector-mongo
